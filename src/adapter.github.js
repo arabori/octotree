@@ -24,7 +24,7 @@ function GitHub() {
       var mutation = mutations[i]
       if (~mutation.oldValue.indexOf('split-diff') ||
           ~mutation.target.className.indexOf('split-diff')) {
-        return $(document).trigger(EVENT.LAYOUT_CHANGE)
+        // return $(document).trigger(EVENT.LAYOUT_CHANGE)
       }
     }
   })
@@ -70,9 +70,11 @@ GitHub.prototype.updateLayout = function(sidebarVisible, sidebarWidth) {
     , shouldPushLeft
 
   if ($containers.length === 4) {
+    var basePadding = parseInt($containers.css('padding-right'), 10);
+    $containers.css('padding-left', basePadding);
     autoMarginLeft = ($('body').width() - $containers.width()) / 2
     shouldPushLeft = sidebarVisible && (autoMarginLeft <= sidebarWidth + spacing)
-    $containers.css('margin-left', shouldPushLeft ? sidebarWidth + spacing : '')
+    shouldPushLeft && $containers.css('padding-left', sidebarWidth + spacing);
   }
 
   // falls-back if GitHub DOM has been updated
