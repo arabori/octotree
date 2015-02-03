@@ -18,7 +18,7 @@ $(document).ready(function() {
       , $sidebar  = $dom.find('.octotree_sidebar')
       , $toggler  = $sidebar.find('.octotree_toggle')
       , $views    = $sidebar.find('.octotree_view')
-      , adapter   = new GitHub()
+      , adapter   = new Bitbucket()
       , optsView  = new OptionsView($dom, store)
       , helpPopup = new HelpPopup($dom, store)
       , treeView  = new TreeView($dom, store, adapter)
@@ -87,6 +87,7 @@ $(document).ready(function() {
     }
 
     function tryLoadRepo(reload) {
+
       var remember = store.get(STORE.REMEMBER)
         , showInNonCodePage = store.get(STORE.NONCODE)
         , shown = store.get(STORE.SHOWN)
