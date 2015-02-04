@@ -8,7 +8,7 @@ const
     ]
   , GH_RESERVED_REPO_NAMES = ['followers', 'following', 'repositories']
   , GH_BRANCH_SEL       = '*[data-master-branch]'
-  , GH_BRANCH_BTN_SEL   = '*[data-master-branch] > .js-select-button'
+  , GH_BRANCH_BTN_SEL   = '*[data-master-branch] > .js -select-button'
   , GH_404_SEL          = '#parallax_wrapper'
   , GH_PJAX_SEL         = '#source-container'
   , GH_CONTAINERS       = 'body > .container, .header > .container, .site > .container, .repohead > .container'
@@ -86,8 +86,8 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   // 404 page, skip
   if ($(GH_404_SEL).length) return false
 
-  // (username)/(reponame)[/(subpart)]
-  var match = window.location.pathname.match(/([^\/]+)\/([^\/]+)(?:\/src\/.*)?/)
+  // (username)/(reponame)[/src/(commit)]
+  var match = window.location.pathname.match(/([^\/]+)\/([^\/]+)(?:\/src\/)?([a-z0-9]+)?/)
   if (!match) return false
 
   // not a repository, skip
@@ -95,10 +95,12 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   if (~GH_RESERVED_REPO_NAMES.indexOf(match[2])) return false
 
   // skip non-code page or not
-  if (!showInNonCodePage && match[3] && !~['tree', 'blob'].indexOf(match[3])) return false
+  //if (!showInNonCodePage) return false
+
+  var matchBranch = location.search.match(/\?at\=(.+)/);
 
   // use selected branch, or previously selected branch, or master
-  var branch = $(GH_BRANCH_SEL).data('ref') ||
+  var branch = $(GH_BRANCH_SEL).data('ref') || (matchBranch && matchBranch[1]) ||
     ((currentRepo.username === match[1] && currentRepo.reponame === match[2] && currentRepo.branch)
       ? currentRepo.branch
       : 'master')
@@ -106,6 +108,7 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   return {
     username : match[1],
     reponame : match[2],
+    commit   : match[3],
     branch   : branch
   }
 }
@@ -174,7 +177,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
             item.a_attr = { href: '#' }
           }
           else if (type === 'blob') {
-            item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/src/' + repo.branch + '/' + path + '?at=' + repo.branch /* closes #97 */ }
+            item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/src/' + repo.commit + '/' + path + '?at=' + repo.branch /* closes #97 */ }
           }
           else if (type === 'commit') {
             moduleUrl = submodules[item.path]
