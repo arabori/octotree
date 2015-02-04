@@ -87,10 +87,12 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
       ? currentRepo.branch
       : 'master')
 
+  var commit = match[3] || branch
+
   return {
     username : match[1],
     reponame : match[2],
-    commit   : match[3],
+    commit   : commit,
     branch   : decodeURIComponent(branch)
   }
 }
