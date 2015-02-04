@@ -18,7 +18,7 @@ $(document).ready(function() {
       , $sidebar  = $dom.find('.octotree_sidebar')
       , $toggler  = $sidebar.find('.octotree_toggle')
       , $views    = $sidebar.find('.octotree_view')
-      , adapter   = new Bitbucket()
+      , adapter   = (location.host === 'bitbucket.org') ? new Bitbucket() : new GitHub()
       , optsView  = new OptionsView($dom, store)
       , helpPopup = new HelpPopup($dom, store)
       , treeView  = new TreeView($dom, store, adapter)

@@ -1,17 +1,8 @@
 const
-    GH_RESERVED_USER_NAMES = [
-      'settings', 'orgs', 'organizations',
-      'site', 'blog', 'about', 'explore',
-      'styleguide', 'showcases', 'trending',
-      'stars', 'dashboard', 'notifications',
-      'search', 'developer', 'account'
-    ]
-  , GH_RESERVED_REPO_NAMES = ['followers', 'following', 'repositories']
-  , GH_BRANCH_SEL       = '*[data-master-branch]'
-  , GH_BRANCH_BTN_SEL   = '*[data-master-branch] > .js -select-button'
-  , GH_404_SEL          = '#parallax_wrapper'
-  , GH_PJAX_SEL         = '#source-container'
-  , GH_CONTAINERS       = 'body > .container, .header > .container, .site > .container, .repohead > .container'
+    BB_404_SEL             = '#not-yet-implemented'
+  , BB_PJAX_SEL            = '#source-container'
+  , BB_RESERVED_USER_NAMES = '#not-yet-implemented'
+  , BB_RESERVED_REPO_NAMES = '#not-yet-implemented'
 
 function Bitbucket() {
   if (!window.MutationObserver) return
@@ -47,7 +38,7 @@ Bitbucket.prototype.selectSubmodule = function(path) {
  * Selects a path.
  */
 Bitbucket.prototype.selectPath = function(path, tabSize) {
-  var container = $(GH_PJAX_SEL)
+  var container = $(BB_PJAX_SEL)
     , qs = tabSize ? ('?ts=' + tabSize) : ''
 
   if (container.length) {
@@ -57,7 +48,7 @@ Bitbucket.prototype.selectPath = function(path, tabSize) {
       container : container
     })
   }
-  
+
   else window.location.href = path + qs // falls back if no container (i.e. Bitbucket DOM has changed or is not yet available)
 }
 
@@ -65,19 +56,8 @@ Bitbucket.prototype.selectPath = function(path, tabSize) {
  * Updates page layout based on visibility status and width of the Octotree sidebar.
  */
 Bitbucket.prototype.updateLayout = function(sidebarVisible, sidebarWidth) {
-  var $containers = $(GH_CONTAINERS)
-    , spacing = 10
-    , autoMarginLeft
-    , shouldPushLeft
-
-  if ($containers.length === 4) {
-    autoMarginLeft = ($('body').width() - $containers.width()) / 2
-    shouldPushLeft = sidebarVisible && (autoMarginLeft <= sidebarWidth + spacing)
-    $containers.css('margin-left', shouldPushLeft ? sidebarWidth + spacing : '')
-  }
-
-  // falls-back if Bitbucket DOM has been updated
-  else $('html').css('margin-left', sidebarVisible ? sidebarWidth - spacing : '')
+  var spacing = 10;
+  $('html').css('margin-left', sidebarVisible ? sidebarWidth - spacing : '')
 }
 
 /**
@@ -85,15 +65,15 @@ Bitbucket.prototype.updateLayout = function(sidebarVisible, sidebarWidth) {
  */
 Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   // 404 page, skip
-  if ($(GH_404_SEL).length) return false
+  if ($(BB_404_SEL).length) return false
 
   // (username)/(reponame)[/src/(commit)]
   var match = window.location.pathname.match(/([^\/]+)\/([^\/]+)(?:\/src\/)?([a-z0-9]+)?/)
   if (!match) return false
 
   // not a repository, skip
-  if (~GH_RESERVED_USER_NAMES.indexOf(match[1])) return false
-  if (~GH_RESERVED_REPO_NAMES.indexOf(match[2])) return false
+  if (~BB_RESERVED_USER_NAMES.indexOf(match[1])) return false
+  if (~BB_RESERVED_REPO_NAMES.indexOf(match[2])) return false
 
   // skip non-code page or not
 
@@ -102,7 +82,7 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   if (!showInNonCodePage && !matchBranch) return false
 
   // use selected branch, or previously selected branch, or master
-  var branch = $(GH_BRANCH_SEL).data('ref') || (matchBranch && matchBranch[1]) ||
+  var branch = (matchBranch && matchBranch[1]) ||
     ((currentRepo.username === match[1] && currentRepo.reponame === match[2] && currentRepo.branch)
       ? currentRepo.branch
       : 'master')
@@ -177,21 +157,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
           else if (type === 'blob') {
             item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/src/' + repo.commit + '/' + path + '?at=' + repo.branch /* closes #97 */ }
           }
-          /*  ***** Not Implemented ***** 
-          else if (type === 'commit') {
-            moduleUrl = submodules[item.path]
-            if (moduleUrl) { // fix #105
-              // special handling for submodules hosted in GitHub
-              if (~moduleUrl.indexOf('github.com')) {
-                moduleUrl = moduleUrl.replace(/^git:/, window.location.protocol)
-                                     .replace(/.git$/, '')
-                item.text = '<a href="' + moduleUrl + '" class="jstree-anchor">' + name + '</a>' +
-                            '<span>@ </span>' +
-                            '<a href="' + moduleUrl + '/tree/' + item.sha + '" class="jstree-anchor">' + item.sha.substr(0, 7) + '</a>'
-              }
-              item.a_attr = { href: moduleUrl }
-            }
-          } */
+          /* TODO: submodules */
         }
 
         setTimeout(function() {
@@ -201,13 +167,8 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
     })
 
     function fetchSubmodules(cb) {
-      var item = tree.filter(function(item) { return /^\.gitmodules$/i.test(item.path) })[0]
-      if (!item) return cb()
-
-      getBlob(item.sha, function(err, data) {
-        if (err || !data) return cb(err)
-        parseGitmodules(data, cb)
-      })
+      /* TODO: submodules */
+      return cb();
     }
   })
 
@@ -219,10 +180,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
   }
 
   function getBlob(sha, cb) {
-    get('/git/blobs/' + sha, function(err, res) {
-      if (err) return cb(err)
-      cb(null, atob(res.content.replace(/\n/g,'')))
-    })
+    /* TODO */
   }
 
   function get(path, cb) {
@@ -237,49 +195,11 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
         cb(null, data)
       })
       .fail(function(jqXHR) {
-        var createTokenUrl = location.protocol + '//' + location.host + '/settings/tokens/new'
-          , error
-          , message
-          , needAuth
+        /* TODO: Properly handle errors */
+        var error = jqXHR.statusText
+          , message = jqXHR.statusText
+          , needAuth = false;
 
-        switch (jqXHR.status) {
-          case 0:
-            error = 'Connection error'
-            message = 'Cannot connect to Bitbucket. If your network connection to Bitbucket is fine, maybe there is an outage of the Bitbucket API. Please try again later.'
-            needAuth = false
-            break
-          case 401:
-            error = 'Invalid token'
-            message = 'The token is invalid. Follow <a href="' + createTokenUrl + '" target="_blank">this link</a> to create a new token and paste it below.'
-            needAuth = true
-            break
-          case 409:
-            error = 'Empty repository'
-            message = 'This repository is empty.'
-            break
-          case 404:
-            error = 'Private repository'
-            message = 'Accessing private repositories requires a Bitbucket access token. Follow <a href="' + createTokenUrl + '" target="_blank">this link</a> to create one and paste it below.'
-            needAuth = true
-            break
-          case 403:
-            if (~jqXHR.getAllResponseHeaders().indexOf('X-RateLimit-Remaining: 0')) {
-              error = 'API limit exceeded'
-              message = 'You have exceeded the Bitbucket API hourly limit and need Bitbucket access token to make extra requests. Follow <a href="' + createTokenUrl + '" target="_blank">this link</a> to create one and paste it below.'
-              needAuth = true
-              break
-            }
-            else {
-              error = 'Forbidden'
-              message = 'You are not allowed to access the API. You might need to provide an access token. Follow <a href="' + createTokenUrl + '" target="_blank">this link</a> to create one and paste it below.'
-              needAuth = true
-              break
-            }
-          default:
-            error = message = jqXHR.statusText
-            needAuth = false
-            break
-        }
         cb({
           error    : 'Error: ' + error,
           message  : message,
