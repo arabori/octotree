@@ -57,6 +57,7 @@ Bitbucket.prototype.selectPath = function(path, tabSize) {
       container : container
     })
   }
+  
   else window.location.href = path + qs // falls back if no container (i.e. Bitbucket DOM has changed or is not yet available)
 }
 
@@ -110,7 +111,7 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
     username : match[1],
     reponame : match[2],
     commit   : match[3],
-    branch   : branch
+    branch   : decodeURIComponent(branch)
   }
 }
 
@@ -123,7 +124,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
   var self = this
     , repo = opts.repo
     , folders = { '': [] }
-    , encodedBranch = encodeURIComponent(decodeURIComponent(repo.branch))
+    , encodedBranch = encodeURIComponent(decodeURIComponent(repo.commit))
     , $dummyDiv = $('<div/>')
 
   getTree(encodedBranch, function(err, tree) {
