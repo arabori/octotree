@@ -10,7 +10,7 @@ const
   , GH_BRANCH_SEL       = '*[data-master-branch]'
   , GH_BRANCH_BTN_SEL   = '*[data-master-branch] > .js-select-button'
   , GH_404_SEL          = '#parallax_wrapper'
-  , GH_PJAX_SEL         = '#js-repo-pjax-container'
+  , GH_PJAX_SEL         = '#source-container'
   , GH_CONTAINERS       = 'body > .container, .header > .container, .site > .container, .repohead > .container'
 
 function Bitbucket() {
@@ -87,7 +87,7 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   if ($(GH_404_SEL).length) return false
 
   // (username)/(reponame)[/(subpart)]
-  var match = window.location.pathname.match(/([^\/]+)\/([^\/]+)(?:\/([^\/]+))?/)
+  var match = window.location.pathname.match(/([^\/]+)\/([^\/]+)(?:\/src\/.*)?/)
   if (!match) return false
 
   // not a repository, skip
@@ -135,16 +135,31 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
         var chunkSize = 300
           , baseIndex = iteration * chunkSize
           , i
-          , item, path, type, index, name, moduleUrl
+          , item, path, type, index, name, moduleUrl, filename
 
         for (i = 0; i < chunkSize; i++) {
-          item = tree[baseIndex + i]
+          filename = tree[baseIndex + i];
+
+          //tree[baseIndex + i]
 
           // we're done
-          if (item === undefined) return cb(null, folders[''])
+          if (filename === undefined) return cb(null, folders[''])
 
-          path  = item
-          type  = path.indexOf('/', path.length - 1) !== -1 ? 'tree' : 'blob'//item.type
+          item = {
+            "path": filename,
+            "mode": "0",
+            "type": filename.indexOf('/', filename.length - 1) !== -1 ? 'tree' : 'blob',
+            "sha": "",
+            "size": 0,
+            "url": "https://api.github.com/repos/buunguyen/octotree/git/blobs/5d89285f708d324ba7899edba8891168b744960d"
+          };
+
+          if (item.type === 'tree') {
+            item.path = item.path.substring(0, item.path.lastIndexOf('/'));
+          }
+
+          path  = item.path
+          type  = item.type
           index = path.lastIndexOf('/')
           name  = $dummyDiv.text(path.substring(index + 1)).html() // sanitizes, closes #9
 
@@ -152,25 +167,20 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
           item.text = name
           item.icon = type // use `type` as class name for tree node
 
-          if (type === 'tree') {
-            folders[path.substring(0, index)] = []
-            item.a_attr = { href: '#' }
-          }
-
           folders[path.substring(0, index)].push(item)
 
           if (type === 'tree') {
-            folders[path.substring(0, index)] = []
+            folders[item.path] = item.children = []
             item.a_attr = { href: '#' }
           }
           else if (type === 'blob') {
-            item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/' + type + '/' + repo.branch + '/' + encodeURIComponent(path) /* closes #97 */ }
+            item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/src/' + repo.branch + '/' + path + '?at=' + repo.branch /* closes #97 */ }
           }
           else if (type === 'commit') {
             moduleUrl = submodules[item.path]
             if (moduleUrl) { // fix #105
-              // special handling for submodules hosted in Bitbucket
-              if (~moduleUrl.indexOf('bitbucket.org')) {
+              // special handling for submodules hosted in GitHub
+              if (~moduleUrl.indexOf('github.com')) {
                 moduleUrl = moduleUrl.replace(/^git:/, window.location.protocol)
                                      .replace(/.git$/, '')
                 item.text = '<a href="' + moduleUrl + '" class="jstree-anchor">' + name + '</a>' +
