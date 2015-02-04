@@ -95,9 +95,10 @@ Bitbucket.prototype.getRepoFromPath = function(showInNonCodePage, currentRepo) {
   if (~GH_RESERVED_REPO_NAMES.indexOf(match[2])) return false
 
   // skip non-code page or not
-  //if (!showInNonCodePage) return false
 
   var matchBranch = location.search.match(/\?at\=(.+)/);
+
+  if (!showInNonCodePage && !matchBranch) return false
 
   // use selected branch, or previously selected branch, or master
   var branch = $(GH_BRANCH_SEL).data('ref') || (matchBranch && matchBranch[1]) ||
@@ -150,11 +151,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
 
           item = {
             "path": filename,
-            "mode": "0",
             "type": filename.indexOf('/', filename.length - 1) !== -1 ? 'tree' : 'blob',
-            "sha": "",
-            "size": 0,
-            "url": "https://api.github.com/repos/buunguyen/octotree/git/blobs/5d89285f708d324ba7899edba8891168b744960d"
           };
 
           if (item.type === 'tree') {
@@ -179,6 +176,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
           else if (type === 'blob') {
             item.a_attr = { href: '/' + repo.username + '/' + repo.reponame + '/src/' + repo.commit + '/' + path + '?at=' + repo.branch /* closes #97 */ }
           }
+          /*  ***** Not Implemented ***** 
           else if (type === 'commit') {
             moduleUrl = submodules[item.path]
             if (moduleUrl) { // fix #105
@@ -192,7 +190,7 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
               }
               item.a_attr = { href: moduleUrl }
             }
-          }
+          } */
         }
 
         setTimeout(function() {
