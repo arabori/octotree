@@ -148,7 +148,8 @@ Bitbucket.prototype.fetchData = function(opts, cb) {
 
           item.id   = PREFIX + path
           item.text = name
-          item.icon = type // use `type` as class name for tree node
+          item.icon = type === 'tree' ? 'aui-icon aui-icon-small aui-iconfont-devtools-folder-closed' : 'aui-icon aui-icon-small aui-iconfont-devtools-file'
+           // use `type` as class name for tree node
 
           folders[path.substring(0, index)].push(item)
 
